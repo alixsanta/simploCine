@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # Front-end TypeScript Service
+  front-end:
+    image: simploncine-front:latest
+    container_name: front-end
+    ports:
+      - "5010:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api-gateway
+    networks:
+       simplon_network:
+        ipv4_address: 172.20.0.10
+
+  # Simplon-Movies Microservice
+  simplon-movies:
+    image: simploncine-movies:latest
+    container_name: simplon-movies
+    depends_on:
+      - db-movies
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5001:8080"
+    networks:
+       simplon_network:
+        ipv4_address: 172.20.0.2
+
+  # Simplon-Movies Database
+  db-movies:
+    image: postgres:13
+    container_name: db-movies
+    restart: unless-stopped
+    volumes:
+      - movies-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: simplon_movies
+    ports:
+      - "5432:5432"
+    networks:
+       simplon_network:
+        ipv4_address: 172.20.0.20
+
+  # Simplon-Sessions Microservice
+  simplon-sessions:
+    image: simploncine-sessions:latest
+    container_name: simplon-sessions
+    depends_on:
+      - db-sessions
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5002:8080"
+    networks:
+       simplon_network:
+        ipv4_address: 172.20.0.3
+
+  # Simplon-Sessions Database
+  db-sessions:
+    image: postgres:13
+    container_name: db-sessions
+    restart: unless-stopped
+    volumes:
+      - sessions-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: simplon_sessions
+    ports:
+      - "5433:5432"
+    networks:
+       simplon_network:
+        ipv4_address: 172.20.0.30
+
+  # API Gateway
+  api-gateway:
+    image: simploncine-gateway:latest
+    container_name: api-gateway
+    depends_on:
+      - simplon-movies
+      - simplon-sessions
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5005:8080"
+    networks:
+       simplon_network:
+        ipv4_address: 172.20.0.4
+
+# Volumes to persist database data
+volumes:
+  movies-data:
+  sessions-data:
+
+# Network definition
+networks:
+  simplon_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
