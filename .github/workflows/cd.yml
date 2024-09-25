@@ -1,4 +1,3 @@
-#deploy to vps
 name: Deploy to VPS
 
 on:
