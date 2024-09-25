@@ -35,5 +35,5 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             cd ~/simplonCine
-            docker-compose pull
-            docker-compose up -d
+            docker compose pull
+            docker compose up -d
