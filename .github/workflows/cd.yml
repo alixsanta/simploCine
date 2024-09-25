@@ -14,7 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Connexion SSH unique pour créer le répertoire, copier les fichiers et exécuter Docker Compose
+      # Step 2: Copier les fichiers dans le VPS avec SCP
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "."
+          target: "~/simplonCine"
+
+      # Step 3: Connexion SSH pour exécuter Docker Compose
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -23,13 +34,6 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-
-            mkdir -p ~/simplonCine
-
-            # Copier les fichiers depuis le runner GitHub vers le VPS
-            scp -o StrictHostKeyChecking=no -r . ~/simplonCine
-
-            # Se déplacer dans le répertoire et exécuter Docker Compose
             cd ~/simplonCine
             docker-compose pull
             docker-compose up -d
